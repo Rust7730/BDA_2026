@@ -1,65 +1,132 @@
-import Image from "next/image";
+import { query } from '@/lib/db';
+import Link from 'next/link';
 
-export default function Home() {
+interface BestBuyer {
+  usuario_id: number;
+  usuario_nombre: string;
+  email: string;
+  ordenes_count: string | number; 
+  nivel_lealtad: string;          
+}
+export default async function BestBuyersPage() {
+  // --- SERVER SIDE ---
+  let rows: BestBuyer[] = [];
+  let errorMsg = null;
+
+  try {
+    const result = await query('SELECT * FROM vw_greater_buyers');
+    rows = result.rows;
+  } catch (error: any) {
+    console.error('Error BD:', error);
+    errorMsg = error.message;
+  }
+
+  const totalOrdenesVIP = rows.reduce((acc, row) => acc + Number(row.ordenes_count), 0);
+
+  const getBadgeColor = (nivel: string) => {
+    if (nivel.includes('VIP')) return 'bg-[#000000] text-[#FFD700] border-[#D1B200]';
+    if (nivel.includes('Leal')) return 'bg-blue-100 text-blue-800 border-blue-200';
+    return 'bg-green-100 text-green-800 border-green-200';
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-5xl mx-auto">
+        
+        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block font-medium">
+          &larr; Volver al Dashboard
+        </Link>
+
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Top Clientes Frecuentes
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-gray-600 mt-2">
+            Usuarios que han realizado 4 o más compras, clasificados por lealtad.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        </header>
+
+        {errorMsg && (
+          <div className="p-4 bg-red-100 text-red-700 rounded mb-6 border border-red-200">
+            Error: {errorMsg}
+          </div>
+        )}
+
+        {!errorMsg && (
+          <>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-green-200 border-l-4 border-l-green-600 mb-8 w-full md:w-1/3">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                Órdenes de Clientes Top
+              </h3>
+              <div className="flex items-end gap-2 mt-2">
+                <p className="text-4xl font-extrabold text-green-700">
+                  {totalOrdenesVIP}
+                </p>
+                <span className="mb-1 text-sm text-gray-500 font-medium">compras totales</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Generadas por tus {rows.length} mejores clientes.
+              </p>
+            </div>
+
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Cliente
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Contacto
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Nivel
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      Total Órdenes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {rows.map((row) => (
+                    <tr key={row.usuario_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-xs mr-3">
+                            {row.usuario_nombre.charAt(0)}
+                          </div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {row.usuario_nombre}
+                          </div>
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {row.email}
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getBadgeColor(row.nivel_lealtad)}`}>
+                          {row.nivel_lealtad}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-800">
+                        {row.ordenes_count}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {rows.length === 0 && (
+                <div className="p-12 text-center text-gray-400">
+                  Aún no hay clientes con más de 4 compras.
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </main>
   );
 }

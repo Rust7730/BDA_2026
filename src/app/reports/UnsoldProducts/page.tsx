@@ -1,19 +1,20 @@
 import { query } from '@/lib/db';
 import Link from 'next/link';
 
-interface TopProduct {
-  producto_id: number;
+interface UnsoldProducts {
+ producto_id: number;
   producto_nombre: string;
-  monto_total_vendido: string | number; 
+  stock: number;
+  capital_estancado: string | number;
 }
 
-export default async function TopProductsPage() {
+export default async function UnsoldProductsPage() {
 
-  let rows: TopProduct[] = [];
+  let rows: UnsoldProducts[] = [];
   let errorMsg = null;
 
   try {
-    const result = await query('SELECT * FROM vw_Topn_prodcuts');
+    const result = await query('SELECT * FROM vw_Unsold_Products');
     rows = result.rows;
   } catch (error: any) {
     console.error('Error de BD:', error);
@@ -27,8 +28,8 @@ export default async function TopProductsPage() {
           &larr; Volver al Dashboard
         </Link>
         
-        <h1 className="text-3xl font-bold text-gray-900">Top Productos</h1>
-        <p className="text-gray-600 mt-2">Productos con mayor recaudación histórica.</p>
+        <h1 className="text-3xl font-bold text-gray-900">Productos no vendidos</h1>
+        <p className="text-gray-600 mt-2">Productos que nunca se han movido.</p>
 
         {errorMsg && (
           <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200">
@@ -42,7 +43,7 @@ export default async function TopProductsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ventas Totales</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Capital Estancado</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -52,8 +53,8 @@ export default async function TopProductsPage() {
                       {product.producto_nombre}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
-                        .format(Number(product.monto_total_vendido))}
+                     {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
+                        .format(Number(product.capital_estancado))}
                     </td>
                   </tr>
                 ))}
