@@ -1,0 +1,35 @@
+
+
+services:
+  # --- SERVICIO 1: BASE DE DATOS ---
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_container
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: tu_password_root
+      POSTGRES_DB: actividad_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Aquí está la magia: carga tus scripts 01, 02, 03... automáticamente
+      - ./db:/docker-entrypoint-initdb.d
+
+  # --- SERVICIO 2: TU APP NEXT.JS ---
+  frontend:
+    build: .             # Usa el Dockerfile que acabamos de crear
+    container_name: nextjs_app
+    restart: on-failure  # Si falla al conectar (pq la BD no está lista), reintenta
+    ports:
+      - "3000:3000"      # Lo verás en localhost:3000
+    depends_on:
+      - db               # Espera a que 'db' inicie antes de arrancar
+    environment:
+      # OJO AQUÍ: Ya no usamos 'localhost' ni '127.0.0.1'.
+      # Dentro de Docker, el host se llama igual que el servicio: 'db'
+      DATABASE_URL: postgres://app_reporter:Rust127754@db:5432/actividad_db
+
+volumes:
+  postgres_data:

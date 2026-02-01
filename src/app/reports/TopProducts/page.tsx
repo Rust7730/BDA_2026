@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { TopProductSchema, type TopProduct } from '@/lib/schemas'; 
 import { z } from 'zod';
 
-
+export const dynamic = 'force-dynamic';
 export default async function TopProductsPage() {
 
   let rows: TopProduct[] = [];

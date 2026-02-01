@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { StockCategorySchema,type StockCategories } from '@/lib/schemas';
 
 
-
+export const dynamic = 'force-dynamic';
 export default async function StockCategoriesPage() {
 
   let rows: StockCategories[] = [];

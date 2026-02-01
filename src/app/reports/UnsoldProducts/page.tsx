@@ -1,9 +1,9 @@
 import { query } from '@/lib/db';
 import Link from 'next/link';
 import { z } from 'zod';
-// Asegúrate de que la ruta de importación sea correcta según tu estructura
-import { UnsoldProductSchema, type UnsoldProducts } from '@/lib/schemas';
 
+import { UnsoldProductSchema, type UnsoldProducts } from '@/lib/schemas';
+export const dynamic = 'force-dynamic';
 export default async function UnsoldProductsPage({
   searchParams,
 }: {
@@ -52,7 +52,6 @@ export default async function UnsoldProductsPage({
             <h1 className="text-3xl font-bold text-gray-900">Productos no vendidos</h1>
             <p className="text-gray-600 mt-2">Productos que nunca se han movido.</p>
           </div>
-          {/* Indicador de página */}
           {!errorMsg && (
              <span className="text-sm text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full">
                Página {currentPage} de {totalPages || 1}

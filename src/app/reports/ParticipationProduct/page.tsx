@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ProductShareSchema,type ProductShare } from '@/lib/schemas';
 
 
-
+export const dynamic = 'force-dynamic';
 export default async function MarketSharePage() {
     let rows: ProductShare[] = [];
     let errorMsg = null;  
