@@ -1,27 +1,44 @@
 import { query } from '@/lib/db';
 import Link from 'next/link';
+import { z } from 'zod';
+import { BestBuyerSchema, type BestBuyer } from '@/lib/schemas';
 
-interface BestBuyer {
-  usuario_id: number;
-  usuario_nombre: string;
-  email: string;
-  ordenes_count: string | number; 
-  nivel_lealtad: string;          
-}
-export default async function BestBuyersPage() {
-  // --- SERVER SIDE ---
+export default async function BestBuyersPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
+  const ITEMS_PER_PAGE = 4; 
+  const currentPage = Number(searchParams.page) || 1;
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
   let rows: BestBuyer[] = [];
+  let totalPages = 0;
   let errorMsg = null;
+  let totalOrdenesPagina = 0; 
 
   try {
-    const result = await query('SELECT * FROM vw_greater_buyers');
-    rows = result.rows;
-  } catch (error: any) {
-    console.error('Error BD:', error);
-    errorMsg = error.message;
-  }
+    const countResult = await query('SELECT COUNT(*) FROM vw_greater_buyers');
+    const totalItems = Number(countResult.rows[0].count);
+    totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-  const totalOrdenesVIP = rows.reduce((acc, row) => acc + Number(row.ordenes_count), 0);
+    const result = await query(
+      'SELECT * FROM vw_greater_buyers ORDER BY ordenes_count DESC LIMIT $1 OFFSET $2',
+      [ITEMS_PER_PAGE, offset]
+    );
+    
+    rows = z.array(BestBuyerSchema).parse(result.rows);
+
+    totalOrdenesPagina = rows.reduce((acc, row) => acc + Number(row.ordenes_count), 0);
+
+  } catch (error: any) {
+    console.error('Error de validación o BD:', error);
+    if (error instanceof z.ZodError) {
+      errorMsg = "Error en la integridad de los datos: " + error.issues[0].message;
+    } else {
+      errorMsg = error.message;
+    }
+  }
 
   const getBadgeColor = (nivel: string) => {
     if (nivel.includes('VIP')) return 'bg-[#000000] text-[#FFD700] border-[#D1B200]';
@@ -37,13 +54,20 @@ export default async function BestBuyersPage() {
           &larr; Volver al Dashboard
         </Link>
 
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Top Clientes Frecuentes
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Usuarios que han realizado 4 o más compras, clasificados por lealtad.
-          </p>
+        <header className="mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Top Clientes Frecuentes
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Usuarios que han realizado 4 o más compras.
+            </p>
+          </div>
+          {!errorMsg && (
+             <span className="text-sm text-gray-500 font-mono bg-gray-100 px-3 py-1 rounded-full">
+               Página {currentPage} de {totalPages || 1}
+             </span>
+          )}
         </header>
 
         {errorMsg && (
@@ -56,16 +80,16 @@ export default async function BestBuyersPage() {
           <>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-green-200 border-l-4 border-l-green-600 mb-8 w-full md:w-1/3">
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">
-                Órdenes de Clientes Top
+                Órdenes (Esta Página)
               </h3>
               <div className="flex items-end gap-2 mt-2">
                 <p className="text-4xl font-extrabold text-green-700">
-                  {totalOrdenesVIP}
+                  {totalOrdenesPagina}
                 </p>
-                <span className="mb-1 text-sm text-gray-500 font-medium">compras totales</span>
+                <span className="mb-1 text-sm text-gray-500 font-medium">compras</span>
               </div>
               <p className="text-xs text-gray-400 mt-2">
-                Generadas por tus {rows.length} mejores clientes.
+                Realizadas por los {rows.length} clientes listados abajo.
               </p>
             </div>
 
@@ -106,7 +130,7 @@ export default async function BestBuyersPage() {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getBadgeColor(row.nivel_lealtad)}`}>
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getBadgeColor(row.nivel_lealtad ?? '')}`}>
                           {row.nivel_lealtad}
                         </span>
                       </td>
@@ -120,9 +144,43 @@ export default async function BestBuyersPage() {
 
               {rows.length === 0 && (
                 <div className="p-12 text-center text-gray-400">
-                  Aún no hay clientes con más de 4 compras.
+                  No hay datos en esta página.
                 </div>
               )}
+
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                
+                <div>
+                  {currentPage > 1 ? (
+                    <Link
+                      href={`?page=${currentPage - 1}`}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      &larr; Anterior
+                    </Link>
+                  ) : (
+                    <button disabled className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                      &larr; Anterior
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={`?page=${currentPage + 1}`}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      Siguiente &rarr;
+                    </Link>
+                  ) : (
+                    <button disabled className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-100 cursor-not-allowed">
+                      Siguiente &rarr;
+                    </button>
+                  )}
+                </div>
+              </div>
+
             </div>
           </>
         )}

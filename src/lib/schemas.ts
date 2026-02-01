@@ -38,7 +38,7 @@ export const ProductShareSchema = z.object({
 
 
 export type TopProduct = z.infer<typeof TopProductSchema>;
-export type UnsoldProduct = z.infer<typeof UnsoldProductSchema>;
+export type UnsoldProducts = z.infer<typeof UnsoldProductSchema>;
 export type BestBuyer = z.infer<typeof BestBuyerSchema>;
 export type StockCategories = z.infer<typeof StockCategorySchema>;
 export type ProductShare = z.infer<typeof ProductShareSchema>;

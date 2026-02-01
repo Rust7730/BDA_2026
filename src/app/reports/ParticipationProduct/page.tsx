@@ -1,18 +1,27 @@
 import { query } from '@/lib/db';
 import Link from 'next/link';
+import { z } from 'zod';
+import { ProductShareSchema,type ProductShare } from '@/lib/schemas';
 
-interface ProductShare {
-  producto_id: number;
-  producto_nombre: string;
-  categoria: string;
-  ventas_producto: string; 
-  participacion_pct: string;
-  clasificacion: 'Producto Estrella' | 'Producto Medio' | 'Producto Débil';
-}
+
 
 export default async function MarketSharePage() {
-  const { rows } = await query('SELECT * FROM vw_participacion_producto');
-
+    let rows: ProductShare[] = [];
+    let errorMsg = null;  
+  try {
+      const result = await query('SELECT * FROM vw_participacion_producto');
+      
+    
+      rows = z.array(ProductShareSchema).parse(result.rows);
+  
+    } catch (error: any) {
+      console.error('Error de validación o BD:', error);
+      if (error instanceof z.ZodError) {
+        errorMsg = "Error en la integridad de los datos: " + error.issues[0].message;
+      } else {
+        errorMsg = error.message;
+      }
+    }
   const getBadgeColor = (tipo: string) => {
     switch (tipo) {
       case 'Producto Estrella': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
