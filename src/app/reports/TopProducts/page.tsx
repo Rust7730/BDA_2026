@@ -56,13 +56,6 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Image
-              className="dark:invert mr-2"
-              src="/Poo.png"
-              alt="Poo"
-              width={20}
-              height={20}
-            />
             Documentation
           </a>
         </div>

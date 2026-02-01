@@ -18,26 +18,26 @@ export default function Home() {
           title="Top Productos"
           description="Los 7 productos con mayor recaudación histórica y su impacto."
           href="/reports/TopProducts"
-          href2="/Podio.png"
+          href2="/Podio2.jpg"
         />
 
         <DashboardCard 
           title="Productos no vendidos"
           description="Identifica los productos que no han generado ventas."
           href="/reports/UnsoldProducts"
-          href2="/images/unsold-products-icon.png"
+          href2="/Unsoled.jpg"
         />
         <DashboardCard 
           title="Mejores Clientes"
           description="Análisis de los clientes con mayores compras."
           href="/reports/GreaterBuyers"
-          href2="/images/greater-buyers-icon.png"
+          href2="/VIP.jpg"
         />
         <DashboardCard 
           title="Total de stock por categoría"
           description="Consulta el inventario disponible seguén por categoría."
           href="/reports/StockCategories"
-          href2="/images/stock-categories-icon.png"
+          href2="/Stock.jpg"
         />
         <DashboardCard 
           title="Análisis Geográfico"
