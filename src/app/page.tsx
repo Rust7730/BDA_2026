@@ -40,10 +40,10 @@ export default function Home() {
           href2="/Stock.jpg"
         />
         <DashboardCard 
-          title="Análisis Geográfico"
-          description="Visualiza las ventas por región y localización."
-          href="/reports/5"
-          href2="/images/geographic-analysis-icon.png"
+          title="Porcentaje de participación de productos"
+          description="Visualiza el porcentaje de participación de cada producto en las ventas totales."
+          href="/reports/ParticipationProduct"
+          href2="/producto-estrella.jpg"
         />
 
         </div>

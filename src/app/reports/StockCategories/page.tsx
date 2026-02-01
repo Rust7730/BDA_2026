@@ -1,65 +1,88 @@
-import Image from "next/image";
+import { query } from '@/lib/db';
+import Link from 'next/link';
+import { z } from 'zod';
+import { StockCategorySchema,type StockCategories } from '@/lib/schemas';
 
-export default function Home() {
+
+
+export default async function StockCategoriesPage() {
+
+  let rows: StockCategories[] = [];
+  let errorMsg = null;
+
+  try {
+    const result = await query('SELECT * FROM vw_Stock_Categories');
+    
+  
+    rows = z.array(StockCategorySchema).parse(result.rows);
+
+  } catch (error: any) {
+    console.error('Error de validación o BD:', error);
+    if (error instanceof z.ZodError) {
+      errorMsg = "Error en la integridad de los datos: " + error.issues[0].message;
+    } else {
+      errorMsg = error.message;
+    }
+  }
+
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-gray-50 p-8">
+            <div className="max-w-4xl mx-auto">
+        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
+          &larr; Volver al Dashboard
+        </Link>
+        
+        <h1 className="text-3xl font-bold text-gray-900">Categorías con Stock</h1>
+        <p className="text-gray-600 mt-2">Categorías con inventario disponible.</p>
+
+        {errorMsg && (
+          <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200">
+            <strong>Error conectando a la BD:</strong> {errorMsg}
+          </div>
+        )}
+
+        {!errorMsg && (
+          <div className="mt-8 bg-white shadow-sm rounded-lg overflow-hidden border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio Promedio</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ratio de Stock</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unidades Totales</th>
+
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {rows.map((categoria) => (
+                  <tr key={categoria.categoria}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {categoria.categoria}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                     {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
+                        .format(Number(categoria.precio_promedio_categoria))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                      {categoria.ratio_piezas_por_sku}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                      {categoria.unidades_totales}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {rows.length === 0 && (
+              <div className="p-6 text-center text-gray-500">
+                No hay datos.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

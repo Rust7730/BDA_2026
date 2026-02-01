@@ -1,11 +1,8 @@
 import { query } from '@/lib/db';
 import Link from 'next/link';
+import { TopProductSchema, type TopProduct } from '@/lib/schemas'; 
+import { z } from 'zod';
 
-interface TopProduct {
-  producto_id: number;
-  producto_nombre: string;
-  monto_total_vendido: string | number; 
-}
 
 export default async function TopProductsPage() {
 
@@ -14,10 +11,17 @@ export default async function TopProductsPage() {
 
   try {
     const result = await query('SELECT * FROM vw_Topn_prodcuts');
-    rows = result.rows;
+    
+  
+    rows = z.array(TopProductSchema).parse(result.rows);
+
   } catch (error: any) {
-    console.error('Error de BD:', error);
-    errorMsg = error.message;
+    console.error('Error de validación o BD:', error);
+    if (error instanceof z.ZodError) {
+      errorMsg = "Error en la integridad de los datos: " + error.issues[0].message;
+    } else {
+      errorMsg = error.message;
+    }
   }
 
   return (
