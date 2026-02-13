@@ -13,14 +13,14 @@ Por qué GROUP BY / HAVING / subconsulta:
 */
 CREATE OR REPLACE VIEW vw_Topn_prodcuts AS 
 
-WITH TotalVentas Global AS (
+WITH TotalVentasGlobal AS (
     SELECT SUM(subtotal) AS gran_total FROM orden_detalles
 )
 SELECT
   p.id AS producto_id,
   p.nombre AS producto_nombre,
   SUM(od.subtotal) AS monto_total_vendido,
-  ROUND((SUM(od.subtotal) / (SELECT gran_total FROM TotalVentas Global)) * 100, 2) AS porcentaje_del_total
+  ROUND((SUM(od.subtotal) / (SELECT gran_total FROM TotalVentasGlobal)) * 100, 2) AS porcentaje_del_total
 FROM productos p
 JOIN orden_detalles od ON od.producto_id = p.id
 GROUP BY p.id, p.nombre
