@@ -13,9 +13,9 @@ export default function Search({ placeholder }: { placeholder: string }) {
     params.set('page', '1'); 
     
     if (term) {
-      params.set('q', term);
+      params.set('query', term); 
     } else {
-      params.delete('q');
+      params.delete('query');    
     }
     replace(`${pathname}?${params.toString()}`);
   }, 300);
@@ -26,7 +26,7 @@ export default function Search({ placeholder }: { placeholder: string }) {
         className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-4 text-sm outline-2 placeholder:text-gray-500 text-purple-900"
         placeholder={placeholder}
         onChange={(e) => handleSearch(e.target.value)}
-        defaultValue={searchParams.get('q')?.toString()}
+        defaultValue={searchParams.get('query')?.toString()} // <--- CAMBIO: leemos 'query'
       />
     </div>
   );
