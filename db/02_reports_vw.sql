@@ -1,30 +1,38 @@
 /*
 REPORTE 1: Top 7 productos por monto total vendido (Top N personalizado)
-Qué devuelve: Los 7 productos con mayor monto total vendido.
+Qué devuelve: Los 7 productos con mayor monto total vendido y su porcentaje del total global.
 Grain (una fila representa): Un producto.
-Métrica(s): SUM(od.subtotal)
+Métrica(s): SUM(od.subtotal) y porcentaje del total.
 Por qué GROUP BY / HAVING / subconsulta:
-- GROUP BY para agregar por producto
-- ORDER BY + LIMIT para construir el Top N
+- Se usa una CTE (WITH) para obtener el gran total de ventas de la tienda.
+- GROUP BY para agregar por producto.
+- ORDER BY + LIMIT para construir el Top N.
+
+-- VERIFY 1: SELECT * FROM vw_Topn_prodcuts;
+-- VERIFY 2: SELECT producto_nombre, porcentaje_del_total FROM vw_Topn_prodcuts WHERE porcentaje_del_total > 10;
 */
 CREATE OR REPLACE VIEW vw_Topn_prodcuts AS 
 
+WITH TotalVentas Global AS (
+    SELECT SUM(subtotal) AS gran_total FROM orden_detalles
+)
 SELECT
   p.id AS producto_id,
   p.nombre AS producto_nombre,
-  SUM(od.subtotal) AS monto_total_vendido
+  SUM(od.subtotal) AS monto_total_vendido,
+  ROUND((SUM(od.subtotal) / (SELECT gran_total FROM TotalVentas Global)) * 100, 2) AS porcentaje_del_total
 FROM productos p
 JOIN orden_detalles od ON od.producto_id = p.id
 GROUP BY p.id, p.nombre
 ORDER BY monto_total_vendido DESC
 LIMIT 7;
-
 /*
 REPORTE 2: Productos sin ventas (Stock Inactivo)
 Qué devuelve: Listado de productos que nunca han sido incluidos en ninguna orden.
 Grain (una fila representa): Un Producto.
 Métrica(s): No aplica (listado de Productos).
 Por qué GROUP BY / HAVING / subconsulta: Se usa NOT EXISTS para detectar ausencia en ventana.
+-- VERIFY 1: SELECT * FROM nombre_de_tu_vista LIMIT 10;
 */
 
 CREATE OR REPLACE VIEW vw_unsold_products AS
@@ -49,6 +57,7 @@ Por qué GROUP BY / HAVING:
 - GROUP BY define el grain a nivel usuario.
 - HAVING se usa para filtrar por una métrica agregada (conteo de órdenes),
   lo cual no puede hacerse en WHERE.
+-- VERIFY 1: SELECT * FROM nombre_de_tu_vista LIMIT 10;
 */
 
 
@@ -78,6 +87,7 @@ Grain (una fila representa): Una categoría.
 Métrica(s): SUM(p.stock)
 Por qué GROUP BY / HAVING / subconsulta: Usamos GROUP BY para juntar los productos 
 de una misma categoría y sumar sus existencias.
+-- VERIFY 1: SELECT * FROM nombre_de_tu_vista LIMIT 10;
 */
 CREATE OR REPLACE VIEW vw_Stock_Categories AS
 
@@ -93,11 +103,12 @@ GROUP BY c.id, c.nombre
 ORDER BY unidades_totales DESC;
 
 
-/*  REPORTE 7: Participación de ventas por producto dentro de su categoría
+/*  REPORTE 5: Participación de ventas por producto dentro de su categoría
 Qué devuelve:porcentaje de participacion de cada producto en las ventas totales de su categoría.
 -- Grain (una fila representa): Un producto.
 -- Métrica(s): SUM(od.subtotal) por producto y por categoría.
 -- Por qué GROUP BY: Necesario para agregar ventas por producto y categoría.
+-- VERIFY 1: SELECT * FROM nombre_de_tu_vista LIMIT 10;
 */
 
 CREATE OR REPLACE VIEW vw_participacion_producto AS
